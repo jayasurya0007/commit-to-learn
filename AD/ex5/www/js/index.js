@@ -1,22 +1,10 @@
-document.addEventListener('deviceready', function() {
-    const usernameField = document.getElementById('username');
-    const passwordField = document.getElementById('password');
-    const resetButton = document.getElementById('reset');
-    const submitButton = document.getElementById('submit');
+function getLocation() {
+  navigator.geolocation.getCurrentPosition(onSuccess, onError);}
 
-    resetButton.addEventListener('click', function() {
-      usernameField.value = '';
-      passwordField.value = '';
-    });
- 
-    submitButton.addEventListener('click', function() {
-      const username = usernameField.value;
-      const password = passwordField.value;
-     
-      if (username && password) {
-        alert('Login successful!');
-      } else {
-        alert('Please enter both username and password.');
-      }
-    });
-  });
+function onSuccess(position) {
+  var latitude = position.coords.latitude;
+  var longitude = position.coords.longitude;
+  document.getElementById('location').innerHTML = 'Latitude: ' + latitude + '<br>Longitude: ' + longitude;}
+
+function onError(error) {
+  alert('Error occurred. Code: ' + error.code + '\nMessage: ' + error.message);}
