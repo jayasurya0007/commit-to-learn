@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "create-expo-app": "^3.3.0",
+    "expo-cli": "^6.3.12",
+    "npm": "^11.3.0"
+  }
+}
