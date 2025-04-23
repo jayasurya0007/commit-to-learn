@@ -1,0 +1,118 @@
+import 'package:flutter/material.dart';
+import 'dart:async';
+import 'dart:math';
+import 'package:flutter/services.dart';
+void main() {
+  runApp(SnakeGame());
+}
+class SnakeGame extends StatefulWidget {
+  @override
+  _SnakeGameState createState() => _SnakeGameState();
+}
+class _SnakeGameState extends State<SnakeGame> {
+  final int rows = 20;final int columns = 10; final int speed = 300;
+  List<Offset> snake = [Offset(5, 5)];Offset direction = Offset(1, 0);Offset food = Offset(3, 3);
+  Timer? timer;int score = 0;bool gameOver = false;
+  @override
+  void initState() {
+    super.initState();startGame();
+  }
+  void startGame() {
+    gameOver = false;
+    timer = Timer.periodic(Duration(milliseconds: speed), (Timer t) {
+      setState(() { moveSnake(); });
+    });}
+  void moveSnake() {
+    Offset newHead = snake.first + direction;
+    if (newHead == food) {
+      snake.insert(0, newHead);spawnFood();score += 1;
+    } else {
+      snake.insert(0, newHead);snake.removeLast();
+    }
+    if (isGameOver(newHead)) {
+      timer?.cancel();setState(() { gameOver = true; });showGameOverDialog();
+    }}
+
+  bool isGameOver(Offset position) {
+    return position.dx < 0 ||
+        position.dy < 0 ||position.dx >= columns ||position.dy >= rows ||
+        snake.skip(1).contains(position) ||
+        (position.dy == rows - 1 && (position.dx < 2 || position.dx > columns - 3));
+  }
+  void spawnFood() {
+    Random random = Random();
+    do {
+      food = Offset(random.nextInt(columns).toDouble(), random.nextInt(rows - 1).toDouble());
+    } while ((food.dy == rows - 1 && (food.dx < 2 || food.dx > columns - 3)) || snake.contains(food));
+  }
+
+  void showGameOverDialog() {
+    showDialog(context: context,builder: (context) => AlertDialog(  title: Text("Game Over"),
+        content: Text("Your score: $score"), actions: [TextButton( onPressed: () {
+            Navigator.pop(context); resetGame();
+          }, child: Text("Restart"),
+        ),],),); }
+  void resetGame() {
+    setState(() {
+      snake = [Offset(5, 5)]; direction = Offset(1, 0); score = 0;  spawnFood();startGame();
+    }); }
+  void changeDirection(Offset newDirection) {
+    if ((newDirection.dx + direction.dx).abs() != 2 &&
+        (newDirection.dy + direction.dy).abs() != 2) {direction = newDirection;
+    }
+  }
+  void handleKeyPress(RawKeyEvent event) {
+    if (event is RawKeyDownEvent) {
+      switch (event.logicalKey.keyLabel) {
+        case 'Arrow Up':
+          changeDirection(Offset(0, -1));break;
+        case 'Arrow Down':
+          changeDirection(Offset(0, 1)); break;
+        case 'Arrow Left':
+          changeDirection(Offset(-1, 0));  break;
+        case 'Arrow Right':
+          changeDirection(Offset(1, 0));break;  }  } }
+  @override
+  Widget build(BuildContext context) {
+    return RawKeyboardListener(
+      focusNode: FocusNode(),onKey: handleKeyPress,
+      child: MaterialApp(
+        home: Scaffold(
+          appBar: AppBar(
+            title: Text("Snake Game"),
+            actions: [ Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text("Score: $score", style: TextStyle(fontSize: 20)), ),
+              IconButton(
+                icon: Icon(Icons.refresh),
+                onPressed: resetGame,),  ],),
+          body: Container(
+            color: Colors.white,
+            child: Column(
+              children: [Expanded(
+                  flex: 3,
+                  child: Container(
+                    color: Colors.black,
+                    child: GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: columns),
+                      itemCount: rows * columns,
+                      itemBuilder: (context, index) {
+                        int x = index % columns;
+                        int y = index ~/ columns;
+                        Offset pos = Offset(x.toDouble(), y.toDouble());
+                        return Container(
+                          margin: EdgeInsets.all(1),
+                          decoration: BoxDecoration(
+                            color: snake.contains(pos) ? Colors.white : (pos == food ? Colors.red : Colors.transparent),
+                            shape: BoxShape.circle, ), ); },  ), ),),
+                if (gameOver)
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text("Game Over", style: TextStyle(color: Colors.black, fontSize: 24)),
+                        Text("Your score: $score", style: TextStyle(color: Colors.black, fontSize: 20)),
+                        ElevatedButton(
+                          onPressed: resetGame,
+                          child: Text("Restart"),
+                        ), ],   ),     ),    ],  ), ),   ),   ),  );  }}

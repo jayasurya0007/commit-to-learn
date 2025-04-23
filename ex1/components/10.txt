@@ -1,0 +1,73 @@
+import 'package:flutter/material.dart';
+void main() => runApp(HangmanApp());
+class HangmanApp extends StatelessWidget {
+  Widget build(BuildContext context) {
+    return MaterialApp(home: HangmanGame());
+  }}
+class HangmanGame extends StatefulWidget {
+  _HangmanGameState createState() => _HangmanGameState();
+}
+class _HangmanGameState extends State<HangmanGame> {
+  final String word = "FLUTTER";
+  List<String> guessed = [];
+  int attemptsLeft = 6;
+  void guessLetter(String letter) {setState(() {
+    if (!word.contains(letter)) attemptsLeft--;
+    guessed.add(letter);
+  });  }
+  String get displayWord {
+    return word.split('').map((c) => guessed.contains(c) ? c : '_').join(' ');
+  }
+  bool get isWon => !displayWord.contains('_'); bool get isLost => attemptsLeft <= 0;
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Hangman")),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(children: [
+          CustomPaint(
+            size: Size(300, 250),
+            painter: StickmanPainter(6 - attemptsLeft, isWon, isLost),
+          ),
+          SizedBox(height: 20),
+          Text(displayWord, style: TextStyle(fontSize: 32, letterSpacing: 2)),
+          SizedBox(height: 20),
+          Text("Attempts left: $attemptsLeft", style: TextStyle(fontSize: 20)),
+          if (isWon) Text("You Won! ", style: TextStyle(fontSize: 24, color: Colors.green)),
+          if (isLost) Text("You Lost! ", style: TextStyle(fontSize: 24, color: Colors.red)),
+          SizedBox(height: 20),
+          Wrap(spacing: 8,runSpacing: 8,
+            children: "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('').map((letter) {
+              return ElevatedButton(
+                onPressed: guessed.contains(letter) || isWon || isLost? null
+                    : () => guessLetter(letter),
+                child: Text(letter),);}).toList(),),],),), ); }}
+class StickmanPainter extends CustomPainter {
+  final int errors;final bool isWon;final bool isLost;
+  StickmanPainter(this.errors, this.isWon, this.isLost);
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint() ..color = Colors.black ..strokeWidth = 4;
+    canvas.drawLine(Offset(50, size.height), Offset(150, size.height), paint); // base
+    canvas.drawLine(Offset(100, size.height), Offset(100, 50), paint); // pole
+    canvas.drawLine(Offset(100, 50), Offset(200, 50), paint); // top
+    canvas.drawLine(Offset(200, 50), Offset(200, 80), paint); // rope
+    if (isWon) {
+      // Safe stickman beside gallows
+      Offset base = Offset(250, size.height - 60);
+      canvas.drawCircle(base.translate(0, -60), 20, paint); // head
+      canvas.drawLine(base.translate(0, -40), base.translate(0, 0), paint); // body
+      canvas.drawLine(base.translate(0, -20), base.translate(-20, -40), paint); // left arm
+      canvas.drawLine(base.translate(0, -20), base.translate(20, -40), paint); // right arm
+      canvas.drawLine(base, base.translate(-20, 40), paint); // left leg
+      canvas.drawLine(base, base.translate(20, 40), paint); // right leg
+    } else {
+      // Hanging stickman
+      if (errors > 0) canvas.drawCircle(Offset(200, 100), 20, paint); // head
+      if (errors > 1) canvas.drawLine(Offset(200, 120), Offset(200, 180), paint); // body
+      if (errors > 2) canvas.drawLine(Offset(200, 140), Offset(170, 160), paint); // left arm
+      if (errors > 3) canvas.drawLine(Offset(200, 140), Offset(230, 160), paint); // right arm
+      if (errors > 4) canvas.drawLine(Offset(200, 180), Offset(180, 220), paint); // left leg
+      if (errors > 5) canvas.drawLine(Offset(200, 180), Offset(220, 220), paint); // right leg
+    }
+  }
+  bool shouldRepaint(CustomPainter oldDelegate) => true;}
