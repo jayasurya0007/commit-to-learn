@@ -1,0 +1,88 @@
+import 'package:flutter/material.dart';
+
+void main() => runApp(const MyApp());
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: ImagePanZoomPage(),
+    );
+  }
+}
+
+class ImagePanZoomPage extends StatefulWidget {
+  const ImagePanZoomPage({super.key});
+  @override
+  State<ImagePanZoomPage> createState() => _ImagePanZoomPageState();
+}
+
+class _ImagePanZoomPageState extends State<ImagePanZoomPage> {
+  double _scale = 1.0;
+  Offset _offset = Offset.zero;        // current pan offset
+  static const double _step = 0.2;     // zoom step
+
+  void _zoomIn()  => setState(() => _scale += _step);
+  void _zoomOut() => setState(() => _scale = (_scale - _step).clamp(0.5, 5.0));
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
+    return Scaffold(
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // GestureDetector to handle drag, wrapping the transformed image
+          GestureDetector(
+            onPanUpdate: (details) {
+              setState(() {
+                _offset += details.delta;        // move by drag delta :contentReference[oaicite:0]{index=0}
+              });
+            },
+            child: Center(
+              child: Transform.translate(
+                offset: _offset,                // apply pan offset :contentReference[oaicite:1]{index=1}
+                child: Transform.scale(
+                  scale: _scale,                // apply zoom scale
+                  child: Image.asset(
+                    'assets/map.png',
+                    width: size.width,
+                    height: size.height,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // zoom buttons in bottom-right
+          Positioned(
+            bottom: 20,
+            right: 20,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FloatingActionButton(
+                  heroTag: 'in',
+                  mini: true,
+                  onPressed: _zoomIn,
+                  child: const Icon(Icons.add),
+                ),
+                const SizedBox(height: 8),
+                FloatingActionButton(
+                  heroTag: 'out',
+                  mini: true,
+                  onPressed: _zoomOut,
+                  child: const Icon(Icons.remove),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
